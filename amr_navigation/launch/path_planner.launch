@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- Stage node with "simple" world and ground truth map publishing -->
+  <include file="$(find amr_stage)/launch/stage.launch">
+    <arg name="map" default="true"/>
+  </include>
+
+  <!-- Occupancy query server node -->
+  <node pkg="amr_mapping" type="occupancy_query_server" name="occupancy_query_server" required="true"/>
+
+  <!-- Path planner node -->
+  <node pkg="amr_navigation" type="path_planner.py" name="path_planner" output="screen" required="true"/>
+
+</launch>
