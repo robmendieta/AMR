@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- Stage node with "octopus" world -->
+  <include file="$(find amr_stage)/launch/stage.launch">
+    <arg name="world" value="octopus"/>
+  </include>
+
+  <!-- Differential drive emulator node -->
+  <node pkg="amr_braitenberg" type="differential_drive_emulator.py" name="differential_drive_emulator" required="true"/>
+
+  <!-- Braitenberg vehicle node -->
+  <node pkg="amr_braitenberg" type="braitenberg_vehicle.py" name="braitenberg_vehicle" required="true"/>
+
+  <!-- Dynamic reconfigure GUI -->
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure"/>
+
+</launch>

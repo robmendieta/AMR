@@ -1,0 +1,36 @@
+<package>
+  <name>amr</name>
+  <version>1.0.0</version>
+  <description>Course package for Autonomous Mobile Robots, University of Applied Sciences Bonn-Rhein-Sieg</description>
+  <maintainer email="alexander.hagg@inf.h-brs.de">Alexander Hagg</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website"></url>
+
+  <author>Alexander Hagg</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>amr_braitenberg</run_depend>
+  <run_depend>amr_stage_worlds</run_depend>
+  <run_depend>amr_navigation</run_depend>
+  <run_depend>amr_perception</run_depend>
+  <run_depend>amr_mapping</run_depend>
+  <run_depend>amr_exploration</run_depend>
+  <run_depend>amr_srvs</run_depend>
+  <run_depend>amr_stage</run_depend>
+  <run_depend>amr_localization</run_depend>
+  <run_depend>amr_ui</run_depend>
+  <run_depend>amr_bugs</run_depend>
+  <run_depend>amr_msgs</run_depend>
+  <run_depend>amr_binaries</run_depend>
+  <run_depend>amr_tools</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+
+</package>
