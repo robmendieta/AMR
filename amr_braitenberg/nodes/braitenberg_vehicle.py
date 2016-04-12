@@ -76,7 +76,21 @@ class BraitenbergVehicleNode:
         Hint: use self._vehicle.compute_wheel_speeds(...) function
         ==================================================================
         """
+        #Max Range for normalizing
+        maxRange = ranges_msg.ranges[0].max_range
+        
+        #Get Ranges from ranges_msg
+        rangeLeft = ranges_msg.ranges[0].range/maxRange
+        rangeRight = ranges_msg.ranges[1].range/maxRange
+        
+        #Call compute_wheel_speeds
+        #Get vRight vLeft
+        vLeft, vRight = self._vehicle.compute_wheel_speeds(rangeLeft , rangeRight)
+        
+        #Publish WheelSpeeds topic cmd_vel_diff
         ws = WheelSpeeds()
+        ws.speeds = [vLeft, vRight]
+        self._wheel_speeds_publisher.publish(ws)
 
 
         # Output the debug info:
@@ -100,8 +114,13 @@ class BraitenbergVehicleNode:
         Hint: see the logdebug message below for an example how to access config parameters.
         ==================================================================
         """
+        rospy.loginfo('Vehicle reconfigured: type {}, '
+                       'factors {:.2f}] and {:.2f}]'.format(
+                                                           ['A','B','C'][config.type],
+                                                           config.factor1,
+                                                           config.factor2))
 
-
+       
         rospy.logdebug('Vehicle reconfigured: type {}, '
                        'factors {:.2f}] and {:.2f}]'.format(
                                                            ['A','B','C'][config.type],

@@ -40,6 +40,14 @@ class DifferentialDriveEmulatorNode:
             You may lookup the geometry_msgs.msg declaration at ros.org
             ========================================================
             """
+            #Get vRight and vLeft
+            vLeft = msg.speeds[0]
+            vRight = msg.speeds[1]
+            
+            #Get linear and angular speeds from wheel speeds
+            twist.linear.x = (vRight + vLeft)/2
+            twist.angular.z = (vRight - vLeft)/self._distance_between_wheels
+            
 
             self._velocity_publisher.publish(twist)
             rospy.logdebug('[{:.2f} {:.2f}] --> [{:.2f} {:.2f}]'.format(msg.speeds[0],
