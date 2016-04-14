@@ -34,15 +34,18 @@ class BraitenbergVehicle:
         (in interval [0..1])
         ========================================================
         """
+        #A
         if self._vehicle_type == 0:
             outLeft = left_in*self._f_1
             outRight = right_in*self._f_2
+        #B
         elif self._vehicle_type == 1:
             outLeft = right_in*self._f_1            
             outRight = left_in*self._f_2
+        #C
         elif self._vehicle_type == 2:
-            outLeft = (left_in - right_in) * self._f_1
-            outRight = (-left_in + right_in) * self._f_2
+            outLeft = (left_in + right_in) * self._f_1
+            outRight = (left_in + right_in) * self._f_2
             
 
         

@@ -48,7 +48,6 @@ class DifferentialDriveEmulatorNode:
             twist.linear.x = (vRight + vLeft)/2
             twist.angular.z = (vRight - vLeft)/self._distance_between_wheels
             
-
             self._velocity_publisher.publish(twist)
             rospy.logdebug('[{:.2f} {:.2f}] --> [{:.2f} {:.2f}]'.format(msg.speeds[0],
                                                                         msg.speeds[1],

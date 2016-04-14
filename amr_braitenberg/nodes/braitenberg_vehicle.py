@@ -114,12 +114,8 @@ class BraitenbergVehicleNode:
         Hint: see the logdebug message below for an example how to access config parameters.
         ==================================================================
         """
-        rospy.loginfo('Vehicle reconfigured: type {}, '
-                       'factors {:.2f}] and {:.2f}]'.format(
-                                                           ['A','B','C'][config.type],
-                                                           config.factor1,
-                                                           config.factor2))
 
+        self._vehicle.set_params(config.type, config.factor2, config.factor2)
        
         rospy.logdebug('Vehicle reconfigured: type {}, '
                        'factors {:.2f}] and {:.2f}]'.format(
