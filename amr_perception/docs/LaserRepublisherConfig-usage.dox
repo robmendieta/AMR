@@ -1,0 +1,7 @@
+\subsubsection usage Usage
+\verbatim
+<node name="laser_republisher" pkg="amr_perception" type="laser_republisher">
+  <param name="rate" type="int" value="0" />
+</node>
+\endverbatim
+
