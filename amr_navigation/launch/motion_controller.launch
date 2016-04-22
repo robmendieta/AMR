@@ -8,7 +8,7 @@
 
   <!-- Motion controller node with "diff" velocity controller -->
   <node pkg="amr_navigation" type="motion_controller.py" name="motion_controller" required="true" output="screen">
-    <param name="controller" value="diff" type="str"/>
+    <param name="controller" value="omni" type="str"/>
   </node>
   <node pkg="amr_ui" type="move_to_client_gui.py" name="move_to_client_gui" required="true" output="screen"/>
 
