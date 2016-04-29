@@ -5,9 +5,10 @@ This module provides a single construct() function which produces a Smach state
 machine that implements wallfollowing behavior.
 
 The state machine contains three states:
-    * findWall:     initial state - drives until a wall is detected
-    * alignWall     aligning state - used to align at convex corners or walls in front of robot 
-    * followWall    following state - used to follow a straight wall, robust against sensor noise, curls around concave corners
+    * SEARCH     initial state - drives until a wall is detected
+    * ALLIGN     aligning state - used to align parallel to wall and curls around concave corners
+    * FOLLOW    following state - used to follow a straight wall
+    * WALL    following state - used to turn out of convex corners
 
 The constructed state machine has three attached methods:
     * set_ranges(ranges): this function should be called to update the range
@@ -22,15 +23,11 @@ a preemption is requested and returns 'preempted' if that is the case.
 
 PACKAGE = 'amr_bugs'
 
-import rospy
 import math
 import roslib
 roslib.load_manifest(PACKAGE)
 import smach
 from preemptable_state import PreemptableState
-from math import log
-from math import cos
-from math import pi
 from types import MethodType
 from geometry_msgs.msg import Twist
 
@@ -59,8 +56,10 @@ __all__ = ['construct']
 #                   return 'found_obstacle'
 #               ud.velocity = (1, 0, 0)
 #==============================================================================
+
+
 def search(userdata):
-    #Go forward-right or forward-left, exit on wall < clearance
+    #Go forward, on wall < clearance go to WALL state 
     userdata.velocity = (userdata.max_forward_velocity, 0, 0)
 
     if userdata.front_min < userdata.clearance:
@@ -68,13 +67,16 @@ def search(userdata):
 
 
 def allign(userdata):
-    angular_tolerance = 0.1
+    #Rotate to keep side_balance close to 0
+    #Translate sideways for side_avg_distance => clearance
+    
+    angular_tolerance = 0.05
     clearance_tolerance = 0.1
     #Angular velocity depends on difference between side sensors
     angular_velocity = math.copysign(userdata.default_rotational_speed,userdata.side_balance)
-    #angular_velocity = userdata.side_balance
 
-    #Passage width for hall > clearance
+
+    #Passage width for hall < clearance
     passage_width = min(userdata.width / 2, userdata.clearance)
     #Error between clearance and side distance
     clearance_error = passage_width - userdata.side_avg_distance
@@ -87,16 +89,16 @@ def allign(userdata):
     #Velocity
     userdata.velocity = (0, side_velocity, angular_velocity)
 
-
+    #If alligned, got to state FOLLOW
     if abs(userdata.side_balance) < angular_tolerance and abs(clearance_error) < clearance_tolerance :
         return 'is_alligned'
 
 def follow(userdata):
-    angular_tolerance = 0.1
+    #Go straight
+    angular_tolerance = 0.05
     clearance_tolerance = 0.1
     
-
-    #Passage width for hall > clearance
+    #Passage width for hall < clearance
     passage_width = min(userdata.width / 2, userdata.clearance)
     
     #Error between clearance and side distance
@@ -110,7 +112,7 @@ def follow(userdata):
     if userdata.front_min < userdata.clearance:
         return 'avoid_wall' 
 
-
+ 
 def wall(userdata):
     #Rotate until sensors on front > clearance
     if userdata.mode == 1:
@@ -121,6 +123,7 @@ def wall(userdata):
     if userdata.front_min > userdata.clearance:
         return 'wall_avoided'
         
+       
     
 def set_ranges(self, ranges):
     """
@@ -132,9 +135,10 @@ def set_ranges(self, ranges):
     side_min0 = min(ranges[15].range, ranges[0].range, ranges[1].range)
     
     if self.userdata.mode == 1:
-        self.userdata.front_min = min(ranges[4].range, ranges[6].range)
+        self.userdata.front_min = min(ranges[4].range, ranges[5].range)
         self.userdata.side_balance = ranges[8].range -  ranges[7].range
         self.userdata.side_avg_distance = (ranges[8].range + ranges[7].range)/2
+        self.userdata.corner = ranges[6].range
     
     elif self.userdata.mode == 0:
         self.userdata.front_min = min(ranges[3].range, ranges[1].range)
@@ -241,7 +245,7 @@ def construct():
                                                                    'max_forward_velocity'],
                                                                    output_keys=['velocity'],
                                                                    outcomes=['found_wall']),
-                                                 transitions={'found_wall': 'ALLIGN'})
+                                                 transitions={'found_wall': 'WALL'})
         
         smach.StateMachine.add('ALLIGN',
                                                   PreemptableState(allign,
@@ -252,6 +256,7 @@ def construct():
                                                                    'default_rotational_speed',
                                                                    'clearance',
                                                                    'max_forward_velocity',
+                                                                   'corner',
                                                                    'front_min'],
                                                                    output_keys=['velocity'],
                                                                    outcomes=['is_alligned']),
@@ -265,7 +270,8 @@ def construct():
                                                                    'max_forward_velocity',
                                                                    'side_balance',
                                                                     'side_avg_distance',
-                                                                   'default_rotational_speed'],
+                                                                   'default_rotational_speed',
+                                                                   'corner'],
                                                                    output_keys=['velocity'],
                                                                    outcomes=['avoid_wall',
                                                                              'is_not_alligned']),
@@ -280,6 +286,7 @@ def construct():
                                                                    output_keys=['velocity'],
                                                                    outcomes=['wall_avoided']),
                                                     transitions={'wall_avoided': 'FOLLOW'})
+                                                   
 
                                                     
         #=========================== YOUR CODE HERE ===========================
