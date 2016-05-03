@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- Stage node with "walls" world.
+       The groundtruth map publishing is disabled because due to some bug the
+       map is displayed in RViz with a wrong scale and thus is misleading. -->
+  <include file="$(find amr_stage)/launch/stage.launch">
+    <arg name="world" value="walls"/>
+    <arg name="map" value="false"/>
+  </include>
+
+  <!-- Bug2 node -->
+  <node pkg="amr_bugs" type="bug2.py" name="bug2" output="screen" required="true"/>
+
+  <!-- Wallfollower node, start disabled -->
+  <!--node pkg="amr_binaries" type="wallfollower" name="wallfollower" required="true"-->
+  <node pkg="amr_bugs" type="wallfollower.py" name="wallfollower" required="true">
+    <param name="enable_at_startup" value="false" type="bool"/>
+  </node>
+
+  <!-- Motion controller node with "diff" velocity controller -->
+  <node pkg="amr_navigation" type="motion_controller.py" name="motion_controller" required="true" output="screen">
+    <param name="controller" value="diff" type="str"/>
+  </node>
+
+  <!-- Obstacle detector node -->
+  <node pkg="amr_perception" type="obstacle_detector" name="obstacle_detector" required="true"/>
+
+  <!-- [move_to] service client GUI, remapped to bug2 node -->
+  <node pkg="amr_ui" type="move_to_client_gui.py" name="move_to_client_gui">
+    <remap from="/motion_controller/move_to" to="/bug2/move_to"/>
+  </node>
+
+</launch>
