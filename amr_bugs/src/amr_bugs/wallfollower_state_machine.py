@@ -62,7 +62,7 @@ def search(userdata):
     #Go forward, on wall < clearance go to WALL state 
     userdata.velocity = (userdata.max_forward_velocity, 0, 0)
 
-    if userdata.front_min < userdata.clearance:
+    if userdata.front_min < 5 * userdata.clearance:
         return 'found_wall'
 
 
@@ -70,16 +70,10 @@ def allign(userdata):
     #Rotate to keep side_balance close to 0
     #Translate sideways for side_avg_distance => clearance
     
-    angular_tolerance = 0.05
     clearance_tolerance = 0.1
-    #Angular velocity depends on difference between side sensors
-    angular_velocity = math.copysign(userdata.default_rotational_speed,userdata.side_balance)
 
-
-    #Passage width for hall < clearance
-    passage_width = min(userdata.width / 2, userdata.clearance)
     #Error between clearance and side distance
-    clearance_error = passage_width - userdata.side_avg_distance
+    clearance_error = userdata.clearance - userdata.side_avg_distance
     side_velocity = math.copysign(userdata.max_forward_velocity, clearance_error)  
     
     #Change direction for mode = 0
@@ -87,10 +81,11 @@ def allign(userdata):
         side_velocity = -side_velocity
 
     #Velocity
-    userdata.velocity = (0, side_velocity, angular_velocity)
+    userdata.velocity = (0, side_velocity, 0)
 
     #If alligned, got to state FOLLOW
-    if abs(userdata.side_balance) < angular_tolerance and abs(clearance_error) < clearance_tolerance :
+    #if abs(userdata.side_balance) < angular_tolerance and abs(clearance_error) < clearance_tolerance :
+    if abs(clearance_error) < clearance_tolerance :
         return 'is_alligned'
 
 def follow(userdata):
@@ -98,16 +93,20 @@ def follow(userdata):
     angular_tolerance = 0.05
     clearance_tolerance = 0.1
     
-    #Passage width for hall < clearance
-    passage_width = min(userdata.width / 2, userdata.clearance)
+    #Angular velocity depends on difference between side sensors
+    if abs(userdata.side_balance) > angular_tolerance:
+        angular_velocity = math.copysign(userdata.default_rotational_speed,userdata.side_balance)
+    else:
+        angular_velocity = 0
     
     #Error between clearance and side distance
-    clearance_error = passage_width - userdata.side_avg_distance
+    clearance_error = userdata.clearance - userdata.side_avg_distance
     
     #Velocity
-    userdata.velocity = (userdata.max_forward_velocity ,0 ,0)
+    userdata.velocity = (userdata.max_forward_velocity ,0 ,angular_velocity)
     
-    if abs(userdata.side_balance) > angular_tolerance or abs(clearance_error) > clearance_tolerance:
+    #if abs(userdata.side_balance) > angular_tolerance or abs(clearance_error) > clearance_tolerance:
+    if abs(clearance_error) > clearance_tolerance:
         return 'is_not_alligned'
     if userdata.front_min < userdata.clearance:
         return 'avoid_wall' 
@@ -120,7 +119,7 @@ def wall(userdata):
     elif userdata.mode == 0:
         userdata.velocity = (0, 0, -userdata.default_rotational_speed)
     
-    if userdata.front_min > userdata.clearance:
+    if userdata.front_min > 2 * userdata.clearance:
         return 'wall_avoided'
         
        
@@ -135,15 +134,15 @@ def set_ranges(self, ranges):
     side_min0 = min(ranges[15].range, ranges[0].range, ranges[1].range)
     
     if self.userdata.mode == 1:
-        self.userdata.front_min = min(ranges[4].range, ranges[5].range)
+        self.userdata.front_min = min(ranges[1].range, ranges[6].range, ranges[2].range, ranges[3].range, ranges[4].range, ranges[5].range)
         self.userdata.side_balance = ranges[8].range -  ranges[7].range
-        self.userdata.side_avg_distance = (ranges[8].range + ranges[7].range)/2
+        self.userdata.side_avg_distance = min(ranges[8].range, ranges[7].range)
         self.userdata.corner = ranges[6].range
     
     elif self.userdata.mode == 0:
-        self.userdata.front_min = min(ranges[3].range, ranges[1].range)
+        self.userdata.front_min = min(ranges[1].range, ranges[6].range, ranges[2].range, ranges[3].range, ranges[4].range, ranges[5].range)
         self.userdata.side_balance = ranges[0].range -  ranges[15].range
-        self.userdata.side_avg_distance = (ranges[15].range + ranges[0].range)/2
+        self.userdata.side_avg_distance = min(ranges[15].range, ranges[0].range)
     
     self.userdata.width = side_min1 + side_min0
 

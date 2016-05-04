@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
 
+from planar import Point, Vec2
+from planar.c import Line
+from math import degrees
+import rospy
+
 #=============================== YOUR CODE HERE ===============================
 # Instructions: complete the currently empty BugBrain class. A new instance of
 #               this class will be created for each new move_to command. The
@@ -44,11 +49,17 @@
 #           self.ln_two = [p1, p2]
 #           self.ln_three = Line.from_points([p1, p2]) # if you are using 'planar'
 
+
 class BugBrain:
 
+    POINT_TOLERANCE = 1
     TOLERANCE = 0.3
 
     def __init__(self, goal_x, goal_y, side):
+        self.wp_goal_point = Point(goal_x,goal_y)
+        self.first_line = True
+        self.goal_unreachable = True
+        self.pose_list = []
         pass
 
     def follow_wall(self, x, y, theta):
@@ -56,6 +67,15 @@ class BugBrain:
         This function is called when the state machine enters the wallfollower
         state.
         """
+        #Create entry pose when finding wall
+        self.wp_entry_pose = Point(x,y)
+        self.pose_list.append(self.wp_entry_pose)
+        
+        #Create line only on first obstacle (line is fixed)
+        if self.first_line : 
+            self.ln_goal_vector = Line.from_points([self.wp_goal_point,self.wp_entry_pose])
+            self.first_line = False
+
         # compute and store necessary variables
         pass
 
@@ -64,6 +84,10 @@ class BugBrain:
         This function is called when the state machine leaves the wallfollower
         state.
         """
+        rospy.loginfo("leave_wall---------------------------------------")
+        #Store test_pose
+        self.pose_list.append(self.wp_test_pose)
+        
         # compute and store necessary variables
         pass
 
@@ -80,6 +104,31 @@ class BugBrain:
         the brain's belief about whether it is the right time (or place) to
         leave the wall and move straight to the goal.
         """
+        
+        #rospy.loginfo("testing pose: %f  %f ", x, y)
+        #rospy.loginfo("entry pose: %f  %f ", self.wp_entry_pose.x, self.wp_entry_pose.y)
+        self.wp_test_pose = Point(x,y)
+        distance_to_line = abs(self.ln_goal_vector.distance_to(self.wp_test_pose))
+        distance_to_entry = abs(self.wp_test_pose.distance_to(self.wp_entry_pose))
+        
+        #If test_pose is POINT_TOLERANCE away from entry
+        #AND is first time in test_pose
+        #Leave wall
+        if  distance_to_entry > self.POINT_TOLERANCE and self.is_pose_repeated(self.wp_test_pose) == 0:     
+            if distance_to_line < self.TOLERANCE:
+                rospy.loginfo("leaving wall at: %f  %f ", x, y)
+                return True
+                
         return False
+    
+    def is_pose_repeated(self, pose):
+        """
+        This functions returns the times the robot has gone through point pose
+        """
+        counter = 0
+        for member in self.pose_list:
+            if pose.distance_to(member) < self.POINT_TOLERANCE:
+                counter = counter + 1
+        return counter
 
 #==============================================================================
