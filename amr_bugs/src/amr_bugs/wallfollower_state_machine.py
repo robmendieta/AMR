@@ -119,7 +119,7 @@ def wall(userdata):
     elif userdata.mode == 0:
         userdata.velocity = (0, 0, -userdata.default_rotational_speed)
     
-    if userdata.front_min > 2 * userdata.clearance:
+    if userdata.front_min > 1.5 * userdata.clearance:
         return 'wall_avoided'
         
        

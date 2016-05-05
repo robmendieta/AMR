@@ -3,7 +3,7 @@
 
 from planar import Point, Vec2
 from planar.c import Line
-from math import degrees
+from math import degrees, sin, cos
 import rospy
 
 #=============================== YOUR CODE HERE ===============================
@@ -51,15 +51,20 @@ import rospy
 
 
 class BugBrain:
-
+    
+    #Tolerance for distance between points
     POINT_TOLERANCE = 1
-    TOLERANCE = 0.3
+    #Tolerance for line detection
+    TOLERANCE = 0.05
 
     def __init__(self, goal_x, goal_y, side):
         self.wp_goal_point = Point(goal_x,goal_y)
         self.first_line = True
         self.goal_unreachable = True
         self.pose_list = []
+        self.old_is_left = True
+        self.new_is_left = True
+
         pass
 
     def follow_wall(self, x, y, theta):
@@ -67,16 +72,17 @@ class BugBrain:
         This function is called when the state machine enters the wallfollower
         state.
         """
-        #Create entry pose when finding wall
+        #Create entry pose when finding wall 
         self.wp_entry_pose = Point(x,y)
-        self.pose_list.append(self.wp_entry_pose)
-        
-        #Create line only on first obstacle (line is fixed)
+          
+        #Create line only on first obstacle encountered
         if self.first_line : 
             self.ln_goal_vector = Line.from_points([self.wp_goal_point,self.wp_entry_pose])
             self.first_line = False
-
-        # compute and store necessary variables
+                
+        self.old_is_left = self.ln_goal_vector.point_left(self.wp_entry_pose)
+        
+        
         pass
 
     def leave_wall(self, x, y, theta):
@@ -84,11 +90,7 @@ class BugBrain:
         This function is called when the state machine leaves the wallfollower
         state.
         """
-        rospy.loginfo("leave_wall---------------------------------------")
-        #Store test_pose
-        self.pose_list.append(self.wp_test_pose)
-        
-        # compute and store necessary variables
+           
         pass
 
     def is_goal_unreachable(self, x, y, theta):
@@ -96,6 +98,10 @@ class BugBrain:
         This function is regularly called from the wallfollower state to check
         the brain's belief about whether the goal is unreachable.
         """
+        
+        if self.is_pose_repeated(Point(x,y)) > 2:
+            return True
+        
         return False
 
     def is_time_to_leave_wall(self, x, y, theta):
@@ -105,19 +111,27 @@ class BugBrain:
         leave the wall and move straight to the goal.
         """
         
-        #rospy.loginfo("testing pose: %f  %f ", x, y)
-        #rospy.loginfo("entry pose: %f  %f ", self.wp_entry_pose.x, self.wp_entry_pose.y)
         self.wp_test_pose = Point(x,y)
-        distance_to_line = abs(self.ln_goal_vector.distance_to(self.wp_test_pose))
-        distance_to_entry = abs(self.wp_test_pose.distance_to(self.wp_entry_pose))
+        self.new_is_left = self.ln_goal_vector.point_left(self.wp_test_pose)
         
-        #If test_pose is POINT_TOLERANCE away from entry
-        #AND is first time in test_pose
-        #Leave wall
-        if  distance_to_entry > self.POINT_TOLERANCE and self.is_pose_repeated(self.wp_test_pose) == 0:     
-            if distance_to_line < self.TOLERANCE:
-                rospy.loginfo("leaving wall at: %f  %f ", x, y)
-                return True
+        #Line for comparing if robot is to left
+        self.ln_robot = Line.from_points([Point(x,y),Point(x+cos(theta),y+sin(theta))])
+      
+        #Check for ditance to entry point
+        if abs(self.wp_test_pose.distance_to(self.wp_entry_pose)) > self.POINT_TOLERANCE:
+            #Check for a change on side            
+            if self.old_is_left != self.new_is_left:
+                self.old_is_left = self.new_is_left            
+                
+                #Save point
+                self.pose_list.append(self.wp_test_pose)
+                
+                #Check goal is left to robot
+                if self.ln_robot.distance_to(self.wp_goal_point) < 0:
+                    #Check if first time on point, then leave                      
+                    if self.is_pose_repeated(self.wp_test_pose) == 1:
+                        return True
+
                 
         return False
     
@@ -127,8 +141,9 @@ class BugBrain:
         """
         counter = 0
         for member in self.pose_list:
-            if pose.distance_to(member) < self.POINT_TOLERANCE:
+            if abs(pose.distance_to(member)) < self.POINT_TOLERANCE:
                 counter = counter + 1
+        rospy.loginfo(counter)
         return counter
 
 #==============================================================================
