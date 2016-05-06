@@ -55,7 +55,7 @@ class BugBrain:
     #Tolerance for distance between points
     POINT_TOLERANCE = 1
     #Tolerance for line detection
-    TOLERANCE = 0.05
+    TOLERANCE = 0.3
 
     def __init__(self, goal_x, goal_y, side):
         self.wp_goal_point = Point(goal_x,goal_y)
@@ -143,7 +143,6 @@ class BugBrain:
         for member in self.pose_list:
             if abs(pose.distance_to(member)) < self.POINT_TOLERANCE:
                 counter = counter + 1
-        rospy.loginfo(counter)
         return counter
 
 #==============================================================================
