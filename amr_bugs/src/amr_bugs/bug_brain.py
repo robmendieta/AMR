@@ -53,7 +53,7 @@ import rospy
 class BugBrain:
     
     #Tolerance for distance between points
-    POINT_TOLERANCE = 1
+    POINT_TOLERANCE = 0.5
     #Tolerance for line detection
     TOLERANCE = 0.3
 
@@ -131,8 +131,7 @@ class BugBrain:
                     #Check if first time on point, then leave                      
                     if self.is_pose_repeated(self.wp_test_pose) == 1:
                         return True
-
-                
+                        
         return False
     
     def is_pose_repeated(self, pose):

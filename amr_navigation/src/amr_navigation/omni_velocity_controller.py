@@ -49,8 +49,8 @@ class OmniVelocityController(VelocityController):
         if abs(linear_dist)>self._l_tolerance or abs(dtheta)>self._a_tolerance:
 
             #Desaccelerating before breaking distance
-            if linear_dist < self._l_breaking_distance:
-                linear_vel = sqrt(2 * linear_dist * self._l_max_acc)
+            if abs(linear_dist) < self._l_breaking_distance or abs(dtheta) < self._a_breaking_distance:
+                linear_vel = min(sqrt(2 * linear_dist * self._l_max_acc),sqrt((2*self._a_max_acc*linear_dist**2)/abs(dtheta)))
             else:
                 linear_vel = self._l_max_vel
             
@@ -63,10 +63,6 @@ class OmniVelocityController(VelocityController):
                 angular_vel = self._a_max_vel
             
             
-#        rospy.loginfo("---------------NEW SPIN--------------------")
-#        rospy.loginfo("linear_dist: %f",linear_dist)
-#        rospy.loginfo("linear_vel: %f",linear_vel)
-#        rospy.loginfo("angular_vel: %f",angular_vel)
         return Velocity(linear_vel_x,linear_vel_y,copysign(angular_vel, dtheta))
 
 
