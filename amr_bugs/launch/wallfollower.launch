@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- Stage node with "rooms" world -->
+  <include file="$(find amr_stage)/launch/stage.launch">
+    <arg name="world" value="rooms"/>
+  </include>
+
+  <!-- Wallfollower node -->
+  <node pkg="amr_bugs" type="wallfollower.py" name="wallfollower" required="true" output="screen"/>
+
+  <!-- Dynamic reconfigure GUI -->
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure"/>
+
+  <!-- Smach viewer -->
+  <node pkg="smach_viewer" type="smach_viewer.py" name="smach_viewer"/>
+
+</launch>

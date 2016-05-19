@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- Stage node with "empty" world -->
+  <include file="$(find amr_stage)/launch/stage.launch">
+    <arg name="world" value="empty"/>
+  </include>
+
+  <!-- Motion controller node with "diff" velocity controller -->
+  <node pkg="amr_navigation" type="motion_controller.py" name="motion_controller" required="true" output="screen">
+    <param name="controller" value="omni" type="str"/>
+  </node>
+  <node pkg="amr_ui" type="move_to_client_gui.py" name="move_to_client_gui" required="true" output="screen"/>
+
+</launch>

@@ -1,0 +1,68 @@
+<package>
+  <name>amr_bugs</name>
+  <version>1.0.0</version>
+  <description>amr_bugs</description>
+  <maintainer email="alexander.hagg@inf.h-brs.de">Alexander Hagg</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website"></url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Alexander Hagg</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>smach</build_depend>
+  <build_depend>smach_ros</build_depend>
+  <build_depend>smach_viewer</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>std_srvs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>amr_msgs</build_depend>
+  <build_depend>amr_srvs</build_depend>
+  <build_depend>amr_stage</build_depend>
+  <build_depend>amr_perception</build_depend>
+  <build_depend>amr_navigation</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>smach</run_depend>
+  <run_depend>smach_ros</run_depend>
+  <run_depend>smach_viewer</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>std_srvs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>amr_msgs</run_depend>
+  <run_depend>amr_srvs</run_depend>
+  <run_depend>amr_stage</run_depend>
+  <run_depend>amr_perception</run_depend>
+  <run_depend>amr_navigation</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+  <!-- <test_depend>roscpp</test_depend> -->
+  <!-- <test_depend>rospy</test_depend> -->
+  <!-- <test_depend>smach</test_depend> -->
+  <!-- <test_depend>smach_ros</test_depend> -->
+  <!-- <test_depend>smach_viewer</test_depend> -->
+  <!-- <test_depend>dynamic_reconfigure</test_depend> -->
+  <!-- <test_depend>actionlib</test_depend> -->
+  <!-- <test_depend>tf</test_depend> -->
+  <!-- <test_depend>std_srvs</test_depend> -->
+  <!-- <test_depend>geometry_msgs</test_depend> -->
+  <!-- <test_depend>amr_msgs</test_depend> -->
+  <!-- <test_depend>amr_srvs</test_depend> -->
+  <!-- <test_depend>amr_stage</test_depend> -->
+  <!-- <test_depend>amr_perception</test_depend> -->
+  <!-- <test_depend>amr_navigation</test_depend> -->
+
+</package>
