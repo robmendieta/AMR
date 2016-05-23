@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- Stage node with "simple" world -->
+  <include file="$(find amr_stage)/launch/stage.launch"/>
+
+  <!-- Path executor node, use obstacle avoidance -->
+  <node pkg="amr_navigation" type="path_executor.py" name="path_executor" output="screen" required="true">
+    <param name="use_obstacle_avoidance" value="true" type="bool"/>
+  </node>
+
+  <!-- Bug2 node -->
+  <node pkg="amr_bugs" type="bug2.py" name="bug2" required="true"/>
+
+  <!-- Wallfollower node, start disabled -->
+  <node pkg="amr_bugs" type="wallfollower.py" name="wallfollower" required="true">
+    <param name="enable_at_startup" value="false" type="bool"/>
+  </node>
+
+  <!-- Motion controller node with "omni" velocity controller -->
+  <node pkg="amr_navigation" type="motion_controller" name="motion_controller" required="true">
+    <param name="controller" value="omni" type="str"/>
+  </node>
+
+  <!-- Obstacle detector node -->
+  <node pkg="amr_perception" type="obstacle_detector" name="obstacle_detector" required="true"/>
+
+</launch>
