@@ -62,7 +62,7 @@ def search(userdata):
     #Go forward, on wall < clearance go to WALL state 
     userdata.velocity = (userdata.max_forward_velocity, 0, 0)
 
-    if userdata.front_min < 5 * userdata.clearance:
+    if userdata.front_min < userdata.clearance:
         return 'found_wall'
 
 
@@ -132,7 +132,7 @@ def set_ranges(self, ranges):
     """
     side_min1 = min(ranges[8].range, ranges[7].range, ranges[6].range)
     side_min0 = min(ranges[15].range, ranges[0].range, ranges[1].range)
-    
+
     if self.userdata.mode == 1:
         self.userdata.front_min = min(ranges[1].range, ranges[6].range, ranges[2].range, ranges[3].range, ranges[4].range, ranges[5].range)
         self.userdata.side_balance = ranges[8].range -  ranges[7].range
