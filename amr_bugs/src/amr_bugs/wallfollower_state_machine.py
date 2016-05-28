@@ -62,7 +62,7 @@ def search(userdata):
     #Go forward, on wall < clearance go to WALL state 
     userdata.velocity = (userdata.max_forward_velocity, 0, 0)
 
-    if userdata.front_min < userdata.clearance:
+    if userdata.all_min < userdata.clearance:
         return 'found_wall'
 
 
@@ -144,6 +144,7 @@ def set_ranges(self, ranges):
         self.userdata.side_balance = ranges[0].range -  ranges[15].range
         self.userdata.side_avg_distance = min(ranges[15].range, ranges[0].range)
     
+    self.userdata.all_min = min(side_min1,side_min0,self.userdata.front_min)
     self.userdata.width = side_min1 + side_min0
 
     #============================= YOUR CODE HERE =============================
@@ -239,7 +240,7 @@ def construct():
         smach.StateMachine.add('SEARCH',
                                                   PreemptableState(search,
                                                                    input_keys=['mode',
-                                                                   'front_min',
+                                                                   'all_min',
                                                                    'clearance',
                                                                    'max_forward_velocity'],
                                                                    output_keys=['velocity'],

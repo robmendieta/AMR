@@ -99,7 +99,7 @@ class BugBrain:
         the brain's belief about whether the goal is unreachable.
         """
         
-        if self.is_pose_repeated(Point(x,y)) > 2:
+        if self.is_pose_repeated(Point(x,y)) > 1:
             return True
         
         return False
