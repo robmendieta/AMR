@@ -132,6 +132,7 @@ def set_ranges(self, ranges):
     """
     side_min1 = min(ranges[8].range, ranges[7].range, ranges[6].range)
     side_min0 = min(ranges[15].range, ranges[0].range, ranges[1].range)
+    back_min = min(ranges[9].range, ranges[10].range, ranges[11].range, ranges[12].range, ranges[13].range, ranges[14].range)
 
     if self.userdata.mode == 1:
         self.userdata.front_min = min(ranges[1].range, ranges[6].range, ranges[2].range, ranges[3].range, ranges[4].range, ranges[5].range)
@@ -144,7 +145,7 @@ def set_ranges(self, ranges):
         self.userdata.side_balance = ranges[0].range -  ranges[15].range
         self.userdata.side_avg_distance = min(ranges[15].range, ranges[0].range)
     
-    self.userdata.all_min = min(side_min1,side_min0,self.userdata.front_min)
+    self.userdata.all_min = min(side_min1, side_min0, back_min, self.userdata.front_min)
     self.userdata.width = side_min1 + side_min0
 
     #============================= YOUR CODE HERE =============================

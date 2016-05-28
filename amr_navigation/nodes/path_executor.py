@@ -15,11 +15,13 @@ from amr_msgs.msg import MoveToAction, MoveToGoal, MoveToResult, ExecutePathActi
 
 class PathExecutor: 
     def __init__(self): 
+        #Create SimpleActionServer
         self._as = SimpleActionServer('/path_executor/execute_path', 
             ExecutePathAction, execute_cb=self.execute_cb, 
             auto_start = False)
+        rospy.loginfo("/path_executor/execute_path action served created")        
         self._as.start()
-        rospy.loginfo("path_executor created\n")
+        rospy.loginfo("/path_executor/execute_path action served started...\n")        
         
         
 
@@ -36,7 +38,7 @@ class PathExecutor:
         #Get obstacle avoidance
         self.obstacle_avoidance = rospy.get_param('/path_executor/use_obstacle_avoidance')
   
-        #Choose server for move_to
+        #Choose server for move_to depending on obstacle avoidance
         if self.obstacle_avoidance : 
             rospy.loginfo("obstacle_avoidance = True")
             move_client = SimpleActionClient('/bug2/move_to', MoveToAction)
@@ -46,62 +48,63 @@ class PathExecutor:
 
         move_client.wait_for_server()            
             
-  
+        #Iterate through path
         for index in range(len(goal.path.poses)) :  
-            rospy.loginfo("Goal received")         
-            rospy.loginfo("X: %f", goal.path.poses[index].pose.position.x)
-            rospy.loginfo("Y: %f", goal.path.poses[index].pose.position.y)
-            rospy.loginfo("Angle: %f", goal.path.poses[index].pose.orientation.z)
+            rospy.loginfo("\nGoal received")         
+            rospy.loginfo("Goal X: %f", goal.path.poses[index].pose.position.x)
+            rospy.loginfo("Goal Y: %f", goal.path.poses[index].pose.position.y)
+            rospy.loginfo("Goal Yaw: %f", goal.path.poses[index].pose.orientation.z)
             
-            #Publish to Move_to server
+            #Publish goal pose to move_to server
             goal2.target_pose = goal.path.poses[index]
             move_client.send_goal(goal2)  
             rospy.loginfo("Sending goal to move_to action server ...")
                 
-            while (True) :
+            while not rospy.is_shutdown() :
+                #Check for preemption
                 if self._as.is_preempt_requested():
-                    rospy.loginfo('Preempted requested')
-                    self._as.set_preempted()
+                    rospy.logwarn('Preempted requested')
+                    move_client.cancel_all_goals()
+                    self._as.set_preempted()                    
                     success = False
+                    aborted = True
                     break
                 
-                #get state
+                #get result state from move_to server
                 state = move_client.get_state()
 
-            
+                #Success
                 if state == 3:
-                    #Success
-                    rospy.loginfo("Goal reached\n")
-                    # publish the feedback
+                    rospy.loginfo("Goal reached")
+                    #Publish the feedback
                     _feedback.pose = goal2.target_pose
                     _feedback.reached = True
                     self._as.publish_feedback(_feedback)
-                    #Store visited poses
+                    #Store to visited poses
                     _result.visited.append(True)
                     break
-            
+                #Unreachable goal
                 elif state == 4:
-                    rospy.loginfo("Goal is unreachable\n")
-                
+                    rospy.logwarn("Goal is unreachable")
+                    #Skip unreachable
                     if goal.skip_unreachable:
-                        #Skip unreachable
-                        rospy.loginfo("Skipping unreachable goal\n")
-                        # publish the feedback
+                        rospy.logwarn("Skipping unreachable goal")
+                        #Publish the feedback
                         _feedback.pose = goal2.target_pose
                         _feedback.reached = False
                         self._as.publish_feedback(_feedback)
                         #Store visited poses
                         _result.visited.append(False)
                         break
+                    #Abort                    
                     else:
-                        #Abort
-                        rospy.loginfo("Abort unreachable goal")
+                        rospy.logwarn("Abort unreachable goal")
                         rospy.loginfo("Cancelling goals...")
                         move_client.cancel_all_goals()
-                        rospy.loginfo("Goals cancelled")
+                        rospy.logwarn("Goals cancelled")
                         rospy.loginfo("Aborting action server")
                         self._as.set_aborted()      
-                        rospy.loginfo("Action server aborted")
+                        rospy.logwarn("Action server aborted")
                         success = False
                         aborted = True
                         break
