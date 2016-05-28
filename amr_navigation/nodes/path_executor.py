@@ -23,8 +23,8 @@ class PathExecutor:
         self._as.start()
         rospy.loginfo("/path_executor/execute_path action served started...\n")        
         
+        self.publisher = rospy.Publisher('/path_executor/current_path',Path, queue_size = 10)
         
-
     def execute_cb(self, goal):
         rospy.loginfo("ExecutePathAction received")         
         # create messages that are used to publish feedback/result
@@ -48,12 +48,13 @@ class PathExecutor:
 
         move_client.wait_for_server()            
             
+        #Publish path to /path_executor/current_path
+        self.publisher.publish(goal.path)
+        
         #Iterate through path
         for index in range(len(goal.path.poses)) :  
             rospy.loginfo("\nGoal received")         
-            rospy.loginfo("Goal X: %f", goal.path.poses[index].pose.position.x)
-            rospy.loginfo("Goal Y: %f", goal.path.poses[index].pose.position.y)
-            rospy.loginfo("Goal Yaw: %f", goal.path.poses[index].pose.orientation.z)
+            rospy.loginfo("Goal: \n{0}".format(goal.path.poses[index].pose))
             
             #Publish goal pose to move_to server
             goal2.target_pose = goal.path.poses[index]
