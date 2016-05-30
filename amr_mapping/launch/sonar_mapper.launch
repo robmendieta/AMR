@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="gnuplot" default="true"/>
+
+  <!-- Stage node with "simple" world, do not publish ground-truth map. -->
+  <include file="$(find amr_stage)/launch/stage.launch">
+    <arg name="map" value="false"/>
+  </include>
+
+  <!-- Sonar mapper node -->
+  <node pkg="amr_mapping" type="sonar_mapper.py" name="sonar_mapper" output="screen" required="true">
+    <param name="resolution" value="0.06" type="double"/>
+    <param name="size_x" value="16" type="int"/>
+    <param name="size_y" value="16" type="int"/>
+    <param name="map_publication_period" value="3" type="double"/>
+  </node>
+
+  <!-- Gnuplot-based occupancy grid dispalys for all maps (optional) -->
+  <node if="$(arg gnuplot)"
+        pkg="amr_ui" type="occupancy_grid_display.py" name="free_map_display"
+        args="--title Free">
+        <remap from="map" to="sonar_mapper/map_free"/>
+  </node>
+  <node if="$(arg gnuplot)"
+        pkg="amr_ui" type="occupancy_grid_display.py" name="occupied_map_display"
+        args="--title Occupied">
+        <remap from="map" to="sonar_mapper/map_occupied"/>
+  </node>
+  <node if="$(arg gnuplot)"
+        pkg="amr_ui" type="occupancy_grid_display.py" name="combined_map_display"
+        args="--title Combined">
+        <remap from="map" to="sonar_mapper/map"/>
+  </node>
+
+</launch>
