@@ -16,28 +16,28 @@ class SonarMapperNode:
     """
     This is a port of the AMR C++ SonarMapperNode
     """
-    
+
     def __init__(self):
-        
+
         rospy.init_node(NODE)
-        
+
         # Wait until SwitchRanger service (and hence stage node) becomes available:
         rospy.loginfo('Waiting for the /switch_ranger service to be advertised...')
         switch_ranger_client = rospy.ServiceProxy('/switch_ranger', SwitchRanger)
         switch_ranger_client.wait_for_service()
-        
+
         # Make sure that the braitenberg sonars are available and enable them.
         srr = SwitchRangerRequest()
         srr.name = 'sonar_pioneer'
         srr.state = True
-        
+
         if switch_ranger_client.call(srr):
             rospy.loginfo('Enabled pioneer sonars.')
         else:
             rospy.logerr('Pioneer sonars are not available, shutting down.')
             exit()
-        
-        
+
+
         """
             Parameters
         """
@@ -46,10 +46,10 @@ class SonarMapperNode:
         size_x = rospy.get_param('sonar_mapper/size_x', 16.0)
         size_y = rospy.get_param('sonar_mapper/size_y', 16.0)
         self._map_publication_period = rospy.get_param('sonar_mapper/map_publication_period', 5.0)
-        
+
         self._map = SonarMap(resolution, size_x, size_y)
-        
-        
+
+
         """
             Publishers
         """
@@ -62,7 +62,7 @@ class SonarMapperNode:
         self._map_occupied_publisher = rospy.Publisher('sonar_mapper/map_occupied',
                                                        OccupancyGrid,
                                                        queue_size=5)
-        
+
         """
             Subscribers
         """
@@ -70,13 +70,13 @@ class SonarMapperNode:
                                                   Ranges,
                                                   self._sonar_callback,
                                                   queue_size=5)
-        
+
         self._tf= tf.TransformListener()
         self._last_map_publication = rospy.Time.now()
         rospy.loginfo('Started [sonar_mapper] node.')
         self._publish_maps(True)
-    
-    
+
+
     def _sonar_callback(self, msg):
         count = 0
         for r in msg.ranges:
@@ -92,6 +92,8 @@ class SonarMapperNode:
                               'Reason: {}.'.format(ex.message))
                 continue
             #Incorporate range reading in the map:
+            #rospy.loginfo("Sonar number")
+            #rospy.loginfo(count)
             self._map.add_scan(position[0],
                                position[1],
                                tf.transformations.euler_from_quaternion(quaternion)[2],
@@ -100,8 +102,8 @@ class SonarMapperNode:
                                r.range,
                                self._calculate_range_uncertainty(r.range, r.max_range))
         self._publish_maps()
-    
-    
+
+
     def _publish_maps(self, force = False):
         if force or self._last_map_publication + rospy.Duration(self._map_publication_period)<= rospy.Time.now():
             w, h = self._map.get_grid_size_x(), self._map.get_grid_size_y()
@@ -117,8 +119,8 @@ class SonarMapperNode:
                                         w, h, resolution, min_x, min_y, 0.0, 1.0,
                                         self._map.get_map_occupied_data()))
             self._last_map_publication = rospy.Time.now()
-    
-    
+
+
     def _create_occupancy_grid_message(self, width, height,
                                        resolution,
                                        orig_x, orig_y,
@@ -135,10 +137,10 @@ class SonarMapperNode:
         grid_msg.info.origin.position.x = orig_x
         grid_msg.info.origin.position.y = orig_y
         grid_msg.data = data
-        
+
         return grid_msg
-    
-    
+
+
     def _calculate_range_uncertainty(self, registered_range, max_range):
         if registered_range<0.1*max_range:
             return 0.01*max_range
