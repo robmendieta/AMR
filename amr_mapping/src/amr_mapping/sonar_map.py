@@ -168,7 +168,8 @@ class SonarMap:
             #rospy.loginfo(m_pos)
 
             if not self._convert_to_cell(m_pos):
-                rospy.loginfo("None")
+                pass
+                #rospy.loginfo("None")
             else:
                 c_distance_x, c_distance_y = self._convert_to_cell(m_pos)
                 #rospy.loginfo("cell")
