@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- Stage node with "rooms" world and ground truth map publishing -->
+  <include file="$(find amr_stage)/launch/stage.launch">
+    <arg name="world" value="rooms"/>
+    <arg name="map" value="true"/>
+  </include>
+
+  <!-- Occupancy query server node -->
+  <node pkg="amr_mapping" type="occupancy_query_server" name="occupancy_query_server" required="true"/>
+
+  <!-- Pose likelihood server node -->
+  <node pkg="amr_localization" type="pose_likelihood_server.py" name="pose_likelihood_server" output="screen" required="true"/>
+
+</launch>
