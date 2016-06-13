@@ -7,7 +7,7 @@ define hokuyosensor sensor
   pose [ 0 0 0.1 0 ]
   fov 360
   # The real number of beams is 683,
-  samples 8
+  samples 12
   color_rgba [1 0 0 0.15]
 )
 
