@@ -91,7 +91,7 @@ class PoseLikelihoodServerNode:
         for member in xrange(len(multiposes)):
     
             #To calculate the probability according the formula for distribution in slides
-            sigma = 0.07
+            sigma = 0.5
             missmatches_counter = 0
             beam_weight = 0.0
             weight_sum = 0.0
@@ -110,26 +110,27 @@ class PoseLikelihoodServerNode:
                 distance_prediction = occupied_points_client_request.distances[beamer_iterator]
                 real_distance = self.real_observations[beamer_iterator]
                 euclidean_distance = abs(distance_prediction - real_distance)
-
+                
                 #Clamping for min/max values of the distance
                 if(distance_prediction < 0.0):
                     distance_prediction = 0.0
                 elif(distance_prediction > self.range_max):
                     distance_prediction = self.range_max
 
-                #Probability distribution: Determine likelihood for measured distance
-                beam_weight = (1.0 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
-                                
-                if(beam_weight <= sigma):
+
+                if(euclidean_distance <= 2*sigma):
+                    #Probability distribution: Determine likelihood for measured distance
+                    beam_weight = (1.0 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
                     weight_sum += beam_weight
                     #Up to 4 missmatches accepted
-                elif(beam_weight > sigma and missmatches_counter <= 4):
-                    weight_sum += beam_weight
+                elif euclidean_distance > 2*sigma :
                     missmatches_counter = missmatches_counter+1
-                else:
-                    missmatches_counter = missmatches_counter+1
-           
-            weight_sum = weight_sum /self.number_of_beams
+
+                
+            if(missmatches_counter >= 4):
+               weight_sum = 0
+            else:
+               weight_sum = weight_sum /self.number_of_beams
             likelihood_array.append(weight_sum)
         
         multipose_response = GetMultiplePoseLikelihoodResponse(likelihood_array)
@@ -171,7 +172,7 @@ class PoseLikelihoodServerNode:
             euler = tf.transformations.euler_from_quaternion(orientations)
             beam_pose.x = robot_pose.pose.position.x + x
             beam_pose.y = robot_pose.pose.position.y + y
-            beam_pose.theta = local_beam_orientation + euler[2]
+            beam_pose.theta = local_beam_orientation + euler[2] + yaw
             twelve_beam_poses.append(beam_pose)
             #request.beams.append(pose)
             #request.threshold = 2.2
