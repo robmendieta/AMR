@@ -27,7 +27,7 @@ class PoseLikelihoodServerNode:
         self.angle_step=0.0
         self.number_of_beams=0
         self.real_observations = []
-        self.likelihood= 0.0
+        self.likelihood = []
 
 
         rospy.init_node(NODE)
@@ -76,8 +76,9 @@ class PoseLikelihoodServerNode:
         self.number_of_beams = len(data.ranges)
         #rospy.loginfo('number of beams')
         #rospy.loginfo(self.number_of_beams)
-        for i in range(self.number_of_beams):
-            self.real_observations = data.ranges[i]
+        print self.number_of_beams
+        for i in xrange(self.number_of_beams):
+            self.real_observations.append(data.ranges[i])
             #rospy.loginfo('real observations')
             #rospy.loginfo(self.real_observations)
         #twelve_beam_poses = self.get_beam_pose()
@@ -85,8 +86,8 @@ class PoseLikelihoodServerNode:
        #pass
 
     def likelihood_callback(self, response):
-        print "blablaba"
-        print response
+        #print "blablaba"
+        #print response
         #response of GetMultiplePoseLikehood
         multipose_response = GetMultiplePoseLikelihoodResponse()
 
@@ -103,13 +104,14 @@ class PoseLikelihoodServerNode:
         occupied_points_request = GetNearestOccupiedPointOnBeamRequest()
         #request.beams.append(pose)
         pose = self.get_beam_pose(self.multiposes)
-        occupied_points_request.beams.append(pose)
+        occupied_points_request.beams = pose
         occupied_points_request.threshold = 2
         beamer_iterator = 0
         distance_prediction = 0.0
         #request to client to get distances
         occupied_points_client_request= self.occupied_points_client(occupied_points_request)
-        while(beamer_iterator < self.number_of_beams):
+        
+        for beamer_iterator in xrange(self.number_of_beams):       
             distance_prediction = occupied_points_client_request.distances[beamer_iterator]
             real_distance = self.real_observations[beamer_iterator]
 		    #Clamping for min/max values of the distance
@@ -130,7 +132,7 @@ class PoseLikelihoodServerNode:
             else:
 			    missmatches_counter = missmatches_counter+1
 
-            beamer_iterator=beamer_iterator+1
+
         #Obtaining the average
         if(weight_sum > self.number_of_beams):
             weight_sum = 1.0
@@ -145,7 +147,7 @@ class PoseLikelihoodServerNode:
     - base_link: frame of the Robot.
     - base_laser_front_link: frame of the LaserFront."""
 
-    def get_beam_pose(self):
+    def get_beam_pose(self, multiposes):
         twelve_beam_poses=[]
         #Transform lasers to robot frame
         try:
@@ -179,7 +181,7 @@ class PoseLikelihoodServerNode:
             #request.beams.append(pose)
             #request.threshold = 2.2
 
-            return twelve_beam_poses
+        return twelve_beam_poses
 
 
     """
