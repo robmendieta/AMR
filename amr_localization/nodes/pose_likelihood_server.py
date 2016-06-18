@@ -123,11 +123,10 @@ class PoseLikelihoodServerNode:
                     #Probability distribution: Determine likelihood for measured distance
                     beam_weight = (1.0 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
                     weight_sum += beam_weight
-                    #Up to 4 missmatches accepted
                 elif euclidean_distance > 2*sigma :
                     missmatches_counter = missmatches_counter+1
 
-                
+            #Up to 4 missmatches are tolerated
             if(missmatches_counter >= 4):
                weight_sum = 0
             else:
@@ -156,15 +155,11 @@ class PoseLikelihoodServerNode:
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             rospy.logerror("Error tf")
 
-        #calling the service
         # Getting the 12 poses of laser beams in the robot frame.
         for i in range(self.number_of_beams):
-            #Data type of the returned msg. Poses with x, y and theta.
             beam_pose = Pose2D()
             local_beam_orientation = (self.angle_lower + (i*self.angle_step))
-            #Converting negatives angles to its positive equivalence.
-            if (local_beam_orientation < 0):
-                local_beam_orientation = local_beam_orientation + 2*math.pi
+
             #Creating the frame of each laser. This frames will be only rotated relative to the robot's frame.
             orientations = (robot_pose.pose.orientation.x,
                             robot_pose.pose.orientation.y,
