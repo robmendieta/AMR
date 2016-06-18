@@ -55,6 +55,7 @@ class PoseLikelihoodServerNode:
         self._laser_subscriber = rospy.Subscriber('/scan_front',LaserScan,self.laser_callback,queue_size=50)
         """Advertising of the service of likelihood."""
         s = rospy.Service('/pose_likelihood_server/get_pose_likelihood',GetMultiplePoseLikelihood,self.likelihood_callback)
+                
         """Initialization of the service GetNearestOccupiedPointOnBeam."""
         rospy.wait_for_service('/occupancy_query_server/get_nearest_occupied_point_on_beam')
         try:
@@ -69,6 +70,7 @@ class PoseLikelihoodServerNode:
     """Callback function: laser_callback
     Function to get the readings of the laser. The angle_upper, angle_lower and angle_step parameters are used to compute the orientation of each beam."""
     def laser_callback(self,data):
+        self.real_observations = []
         self.angle_upper = data.angle_max
         self.angle_lower = data.angle_min
         self.angle_step = data.angle_increment
@@ -79,8 +81,9 @@ class PoseLikelihoodServerNode:
             self.real_observations.append(data.ranges[i])
 
 
-    def likelihood_callback(self, response):
 
+    def likelihood_callback(self, response):
+        print self.real_observations
 
         #storing
         multiposes = response.poses
@@ -91,7 +94,7 @@ class PoseLikelihoodServerNode:
         for member in xrange(len(multiposes)):
     
             #To calculate the probability according the formula for distribution in slides
-            sigma = 0.5
+            sigma = 0.4
             missmatches_counter = 0
             beam_weight = 0.0
             weight_sum = 0.0
@@ -131,6 +134,7 @@ class PoseLikelihoodServerNode:
                weight_sum = 0
             else:
                weight_sum = weight_sum /self.number_of_beams
+               
             likelihood_array.append(weight_sum)
         
         multipose_response = GetMultiplePoseLikelihoodResponse(likelihood_array)
@@ -155,7 +159,6 @@ class PoseLikelihoodServerNode:
             rospy.logerror("Error tf")
 
         #calling the service
-        #request = GetNearestOccupiedPointOnBeamRequest()
         # Getting the 12 poses of laser beams in the robot frame.
         for i in range(self.number_of_beams):
             #Data type of the returned msg. Poses with x, y and theta.
@@ -174,8 +177,6 @@ class PoseLikelihoodServerNode:
             beam_pose.y = robot_pose.pose.position.y + y
             beam_pose.theta = local_beam_orientation + euler[2] + yaw
             twelve_beam_poses.append(beam_pose)
-            #request.beams.append(pose)
-            #request.threshold = 2.2
 
         return twelve_beam_poses
 
