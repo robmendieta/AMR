@@ -74,20 +74,12 @@ class PoseLikelihoodServerNode:
         self.angle_step = data.angle_increment
         self.range_max = data.range_max
         self.number_of_beams = len(data.ranges)
-        #rospy.loginfo('number of beams')
-        #rospy.loginfo(self.number_of_beams)
-        print self.number_of_beams
+
         for i in xrange(self.number_of_beams):
             self.real_observations.append(data.ranges[i])
-            #rospy.loginfo('real observations')
-            #rospy.loginfo(self.real_observations)
-        #twelve_beam_poses = self.get_beam_pose()
-        #rospy.loginfo(twelve_beam_poses)
-       #pass
+
 
     def likelihood_callback(self, response):
-        #print "blablaba"
-        #print response
         #response of GetMultiplePoseLikehood
         multipose_response = GetMultiplePoseLikelihoodResponse()
 
@@ -110,10 +102,11 @@ class PoseLikelihoodServerNode:
         distance_prediction = 0.0
         #request to client to get distances
         occupied_points_client_request= self.occupied_points_client(occupied_points_request)
-        
-        for beamer_iterator in xrange(self.number_of_beams):       
+
+        for beamer_iterator in xrange(self.number_of_beams):
             distance_prediction = occupied_points_client_request.distances[beamer_iterator]
             real_distance = self.real_observations[beamer_iterator]
+            euclidean_distance = distance_prediction - real_distance
 		    #Clamping for min/max values of the distance
             if(distance_prediction < 0.0):
                 distance_prediction = 0.0
@@ -122,17 +115,18 @@ class PoseLikelihoodServerNode:
 
 		    #Probability distribution: Determine likelihood for measured distance
             beam_weight = (1 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
-            if(beam_weight <= 2 * sigma):
+            if(euclidean_distance <= 2 * sigma):
                 weight_sum += beam_weight
             #Up to 4 missmatches accepted
-            elif(beam_weight > 2 * sigma and missmatches_counter <= 4):
+            elif(euclidean_distance > 2 * sigma and missmatches_counter <= 4):
 			    weight_sum += beam_weight
 			    missmatches_counter = missmatches_counter+1
 
             else:
 			    missmatches_counter = missmatches_counter+1
 
-
+        print weight_sum
+        print euclidean_distance
         #Obtaining the average
         if(weight_sum > self.number_of_beams):
             weight_sum = 1.0
