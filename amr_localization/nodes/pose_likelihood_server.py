@@ -83,13 +83,11 @@ class PoseLikelihoodServerNode:
 
 
     def likelihood_callback(self, response):
-        print self.real_observations
 
         #storing
         multiposes = response.poses
         #To store the probabilities
         likelihood_array=[]
-
 
         for member in xrange(len(multiposes)):
     
