@@ -91,7 +91,7 @@ class PoseLikelihoodServerNode:
         for member in xrange(len(multiposes)):
     
             #To calculate the probability according the formula for distribution in slides
-            sigma = 0.7
+            sigma = 0.07
             missmatches_counter = 0
             beam_weight = 0.0
             weight_sum = 0.0
@@ -119,10 +119,11 @@ class PoseLikelihoodServerNode:
 
                 #Probability distribution: Determine likelihood for measured distance
                 beam_weight = (1.0 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
-                if(beam_weight <= 2*sigma):
+                                
+                if(beam_weight <= sigma):
                     weight_sum += beam_weight
                     #Up to 4 missmatches accepted
-                elif(beam_weight > 2*sigma and missmatches_counter <= 4):
+                elif(beam_weight > sigma and missmatches_counter <= 4):
                     weight_sum += beam_weight
                     missmatches_counter = missmatches_counter+1
                 else:
