@@ -80,11 +80,16 @@ class PoseLikelihoodServerNode:
             self.real_observations = data.ranges[i]
             #rospy.loginfo('real observations')
             #rospy.loginfo(self.real_observations)
+        #twelve_beam_poses = self.get_beam_pose()
+        #rospy.loginfo(twelve_beam_poses)
        #pass
 
     def likelihood_callback(self, response):
+        print "blablaba"
+        print response
         #response of GetMultiplePoseLikehood
         multipose_response = GetMultiplePoseLikelihoodResponse()
+
         #storing
         self.multiposes = response.poses
         #To store the probabilities
@@ -114,7 +119,7 @@ class PoseLikelihoodServerNode:
                 distance_prediction = self.range_max
 
 		    #Probability distribution: Determine likelihood for measured distance
-            beam_weight = (1 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * matth.pow(sigma, 2.0)))
+            beam_weight = (1 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
             if(beam_weight <= 2 * sigma):
                 weight_sum += beam_weight
             #Up to 4 missmatches accepted
@@ -140,7 +145,7 @@ class PoseLikelihoodServerNode:
     - base_link: frame of the Robot.
     - base_laser_front_link: frame of the LaserFront."""
 
-    def get_beam_pose(self, robotpose):
+    def get_beam_pose(self):
         twelve_beam_poses=[]
         #Transform lasers to robot frame
         try:
@@ -161,14 +166,14 @@ class PoseLikelihoodServerNode:
             #Converting negatives angles to its positive equivalence.
             if (local_beam_orientation < 0):
                 local_beam_orientation = local_beam_orientation + 2*math.pi
-                #Creating the frame of each laser. This frames will be only rotated relative to the robot's frame.
+            #Creating the frame of each laser. This frames will be only rotated relative to the robot's frame.
             orientations = (self.multiposes[i].pose.orientation.x,
                             self.multiposes[i].pose.orientation.y,
                             self.multiposes[i].pose.orientation.z,
                             self.multiposes[i].pose.orientation.w)
             euler = tf.transformations.euler_from_quaternion(orientations)
-            beam_pose.x = self.multiposes[i].pose.position.x + position[0]
-            beam_pose.y = self.multiposes[i].pose.position.y + position[1]
+            beam_pose.x = self.multiposes[i].pose.position.x + x
+            beam_pose.y = self.multiposes[i].pose.position.y + y
             beam_pose.theta = local_beam_orientation + euler[2]
             twelve_beam_poses.append(beam_pose)
             #request.beams.append(pose)
