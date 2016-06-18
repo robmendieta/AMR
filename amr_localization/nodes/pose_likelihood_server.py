@@ -80,61 +80,62 @@ class PoseLikelihoodServerNode:
 
 
     def likelihood_callback(self, response):
-        #response of GetMultiplePoseLikehood
-        multipose_response = GetMultiplePoseLikelihoodResponse()
+
 
         #storing
         self.multiposes = response.poses
         #To store the probabilities
-        self.likelihood_array=[]
-        #To calculate the probability according the formula for distribution in slides
-        sigma = 0.7
-        missmatches_counter = 0
-        beam_weight = 0.0
-        weight_sum = 1.0
-        #creating the service request
-        occupied_points_request = GetNearestOccupiedPointOnBeamRequest()
-        #request.beams.append(pose)
-        pose = self.get_beam_pose(self.multiposes)
-        occupied_points_request.beams = pose
-        occupied_points_request.threshold = 2
-        beamer_iterator = 0
-        distance_prediction = 0.0
-        #request to client to get distances
-        occupied_points_client_request= self.occupied_points_client(occupied_points_request)
+        likelihood_array=[]
 
-        for beamer_iterator in xrange(self.number_of_beams):
-            distance_prediction = occupied_points_client_request.distances[beamer_iterator]
-            real_distance = self.real_observations[beamer_iterator]
-            euclidean_distance = distance_prediction - real_distance
-		    #Clamping for min/max values of the distance
-            if(distance_prediction < 0.0):
-                distance_prediction = 0.0
-            elif(distance_prediction > self.range_max):
-                distance_prediction = self.range_max
 
-		    #Probability distribution: Determine likelihood for measured distance
-            beam_weight = (1 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
-            if(euclidean_distance <= 2 * sigma):
-                weight_sum += beam_weight
-            #Up to 4 missmatches accepted
-            elif(euclidean_distance > 2 * sigma and missmatches_counter <= 4):
-			    weight_sum += beam_weight
-			    missmatches_counter = missmatches_counter+1
-
-            else:
-			    missmatches_counter = missmatches_counter+1
-
-        print weight_sum
-        print euclidean_distance
-        #Obtaining the average
-        if(weight_sum > self.number_of_beams):
+        for member in xrange(len(self.multiposes)):
+            
+            #To calculate the probability according the formula for distribution in slides
+            sigma = 0.7
+            missmatches_counter = 0
+            beam_weight = 0.0
             weight_sum = 1.0
-        else:
-            weight_sum = weight_sum / self.number_of_beams
+            #creating the service request
+            occupied_points_request = GetNearestOccupiedPointOnBeamRequest()
+            #request.beams.append(pose)
+            pose = self.get_beam_pose(member)
+            occupied_points_request.beams = pose
+            occupied_points_request.threshold = 2
+            beamer_iterator = 0
+            distance_prediction = 0.0
+            #request to client to get distances
+            occupied_points_client_request= self.occupied_points_client(occupied_points_request)
+            
+            for beamer_iterator in xrange(self.number_of_beams): 
+                distance_prediction = occupied_points_client_request.distances[beamer_iterator]
+                real_distance = self.real_observations[beamer_iterator]
+                euclidean_distance = abs(distance_prediction - real_distance)
+                #Clamping for min/max values of the distance
+                if(distance_prediction < 0.0):
+                    distance_prediction = 0.0
+                elif(distance_prediction > self.range_max):
+                    distance_prediction = self.range_max
 
+                #Probability distribution: Determine likelihood for measured distance
+                beam_weight = (1.0 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
+                if(euclidean_distance <= 2 * sigma):
+                    weight_sum += beam_weight
+                    #Up to 4 missmatches accepted
+                elif(euclidean_distance > 2 * sigma and missmatches_counter <= 4):
+                    weight_sum += beam_weight
+                    missmatches_counter = missmatches_counter+1
 
-        self.likelihood.append(weight_sum)
+                else:
+                    missmatches_counter = missmatches_counter+1
+           
+            weight_sum = weight_sum /self.number_of_beams
+            likelihood_array.append(weight_sum)
+        
+        print likelihood_array
+        multipose_response = GetMultiplePoseLikelihoodResponse(likelihood_array)
+
+        return multipose_response
+        
 
 
     """Transform a point from the frame LaserFront to the frame of the Robot
