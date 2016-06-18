@@ -83,25 +83,25 @@ class PoseLikelihoodServerNode:
 
 
         #storing
-        self.multiposes = response.poses
+        multiposes = response.poses
         #To store the probabilities
         likelihood_array=[]
 
 
-        for member in xrange(len(self.multiposes)):
-            
+        for member in xrange(len(multiposes)):
+    
             #To calculate the probability according the formula for distribution in slides
             sigma = 0.7
             missmatches_counter = 0
             beam_weight = 0.0
-            weight_sum = 1.0
+            weight_sum = 0.0
             #creating the service request
             occupied_points_request = GetNearestOccupiedPointOnBeamRequest()
             #request.beams.append(pose)
-            pose = self.get_beam_pose(member)
+            pose = self.get_beam_pose(multiposes[member])
             occupied_points_request.beams = pose
             occupied_points_request.threshold = 2
-            beamer_iterator = 0
+            beamer_iterator = 0                
             distance_prediction = 0.0
             #request to client to get distances
             occupied_points_client_request= self.occupied_points_client(occupied_points_request)
@@ -110,6 +110,7 @@ class PoseLikelihoodServerNode:
                 distance_prediction = occupied_points_client_request.distances[beamer_iterator]
                 real_distance = self.real_observations[beamer_iterator]
                 euclidean_distance = abs(distance_prediction - real_distance)
+
                 #Clamping for min/max values of the distance
                 if(distance_prediction < 0.0):
                     distance_prediction = 0.0
@@ -118,20 +119,18 @@ class PoseLikelihoodServerNode:
 
                 #Probability distribution: Determine likelihood for measured distance
                 beam_weight = (1.0 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
-                if(euclidean_distance <= 2 * sigma):
+                if(beam_weight <= 2*sigma):
                     weight_sum += beam_weight
                     #Up to 4 missmatches accepted
-                elif(euclidean_distance > 2 * sigma and missmatches_counter <= 4):
+                elif(beam_weight > 2*sigma and missmatches_counter <= 4):
                     weight_sum += beam_weight
                     missmatches_counter = missmatches_counter+1
-
                 else:
                     missmatches_counter = missmatches_counter+1
            
             weight_sum = weight_sum /self.number_of_beams
             likelihood_array.append(weight_sum)
         
-        print likelihood_array
         multipose_response = GetMultiplePoseLikelihoodResponse(likelihood_array)
 
         return multipose_response
@@ -142,7 +141,7 @@ class PoseLikelihoodServerNode:
     - base_link: frame of the Robot.
     - base_laser_front_link: frame of the LaserFront."""
 
-    def get_beam_pose(self, multiposes):
+    def get_beam_pose(self, robot_pose):
         twelve_beam_poses=[]
         #Transform lasers to robot frame
         try:
@@ -164,13 +163,13 @@ class PoseLikelihoodServerNode:
             if (local_beam_orientation < 0):
                 local_beam_orientation = local_beam_orientation + 2*math.pi
             #Creating the frame of each laser. This frames will be only rotated relative to the robot's frame.
-            orientations = (self.multiposes[i].pose.orientation.x,
-                            self.multiposes[i].pose.orientation.y,
-                            self.multiposes[i].pose.orientation.z,
-                            self.multiposes[i].pose.orientation.w)
+            orientations = (robot_pose.pose.orientation.x,
+                            robot_pose.pose.orientation.y,
+                            robot_pose.pose.orientation.z,
+                            robot_pose.pose.orientation.w)
             euler = tf.transformations.euler_from_quaternion(orientations)
-            beam_pose.x = self.multiposes[i].pose.position.x + x
-            beam_pose.y = self.multiposes[i].pose.position.y + y
+            beam_pose.x = robot_pose.pose.position.x + x
+            beam_pose.y = robot_pose.pose.position.y + y
             beam_pose.theta = local_beam_orientation + euler[2]
             twelve_beam_poses.append(beam_pose)
             #request.beams.append(pose)
