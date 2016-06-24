@@ -107,7 +107,7 @@ class PoseLikelihoodServerNode:
             #request to client to get distances
             occupied_points_client_request= self.occupied_points_client(occupied_points_request)
             
-            for beamer_iterator in xrange(self.number_of_beams): 
+            for beamer_iterator in xrange(len(self.real_observations)): 
                 distance_prediction = occupied_points_client_request.distances[beamer_iterator]
                 real_distance = self.real_observations[beamer_iterator]
                 euclidean_distance = abs(distance_prediction - real_distance)
@@ -126,12 +126,11 @@ class PoseLikelihoodServerNode:
                 elif euclidean_distance > 2*sigma :
                     missmatches_counter = missmatches_counter+1
 
-            #Up to 4 missmatches are tolerated
-            if(missmatches_counter >= 4):
-               weight_sum = 0
-            else:
-               weight_sum = weight_sum /self.number_of_beams
-               
+            if missmatches_counter < 4:
+                weight_sum = weight_sum /self.number_of_beams
+            else :
+                weight_sum = 0
+                
             likelihood_array.append(weight_sum)
         
         multipose_response = GetMultiplePoseLikelihoodResponse(likelihood_array)

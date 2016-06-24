@@ -4,6 +4,7 @@ PACKAGE = 'amr_localization'
 NODE = 'particle_filter'
 
 import roslib
+import numpy as np
 roslib.load_manifest(PACKAGE)
 import rospy
 import math
@@ -18,14 +19,15 @@ class ParticleFilter:
     def __init__(self, map_min_x, map_max_x, map_min_y, map_max_y, weigh_particles_callback):
         self.weigh_particles_callback = weigh_particles_callback
         self.particle_set_size = 100
-        self.random_particles_size = 10
+        self.random_particles_size = 20
         self.motion_model = MotionModel(0.02, 0.01)
         self.random_particle_generator = RandomParticleGenerator(map_min_x, map_max_x, map_min_y, map_max_y)
-
+    
         self.particles = []
         for i in range(self.particle_set_size):
             self.particles.append(self.random_particle_generator.generate_particle())
-
+        
+        self.pose_estimate = Pose()
 
     def update(self, x, y, yaw):
         '''
@@ -58,7 +60,62 @@ class ParticleFilter:
                      self.pose_estimate = selected_particle.pose
         ============================================================================
         '''
-        pass
+
+        
+        #Set motion with odometry increments
+        self.motion_model.setMotion(x,y,yaw)     
+        
+                
+        #Apply motion to particles
+        for i in range(self.particle_set_size):
+                self.particles[i].pose = self.motion_model.sample(self.particles[i].pose)
+                
+        #Get particle weights
+        weights = self.weigh_particles_callback(self.particles)
+           
+        #Normalize
+        weight_total = 0.0    
+        for i in range(self.particle_set_size):
+            weight_total += weights[i]
+        
+        for i in range(self.particle_set_size):
+            self.particles[i].weight = weights[i]/weight_total
+
+        #Sort particles
+        self.particles.sort(reverse=True,key=lambda particles: particles.weight)
+           
+        #Resampling
+        particles_resampled = self.particles
+        particles_resampled = []
+                
+        #Stochastic universal sampling
+        F = 1.0
+        N = self.particle_set_size-self.random_particles_size
+        P = F/N    
+        Start = random.random()*P
+        Points = []
+        for i in range(N):
+            Points.append(Start+i*P)
+        fitness_sum = 0
+        counter = 0  
+        for j in range(len(Points)):
+            while  fitness_sum < Points[j] and counter < len(Points):
+                fitness_sum += self.particles[counter].weight
+                counter += 1
+            particles_resampled.append(self.particles[counter])
+
+        
+        self.particles = particles_resampled
+        
+        #Generate new samples
+        for i in range(self.random_particles_size):
+            self.particles.append(self.random_particle_generator.generate_particle())        
+            rospy.loginfo(self.particles[-1].weight)
+
+        #Pose estimate
+        self.pose_estimate.theta +=  yaw
+        self.pose_estimate.x += x*math.cos(self.pose_estimate.theta) - y*math.sin(self.pose_estimate.theta)
+        self.pose_estimate.y += x*math.sin(self.pose_estimate.theta) + y*math.cos(self.pose_estimate.theta)
 
 
     def get_particles(self):

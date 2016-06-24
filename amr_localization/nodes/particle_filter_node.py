@@ -84,6 +84,7 @@ class ParticleFilterNode:
         try:
             now = rospy.Time.now()
             #TODO wait for transform
+            rospy.sleep(0.1)
             transform = self._tf.lookupTransform('base_link', 'odom', now)
             transform = tf.TransformerROS().fromTranslationRotation(transform[0],transform[1])
         except tf.Exception, e:
