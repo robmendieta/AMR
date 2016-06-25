@@ -14,17 +14,17 @@ class RandomParticleGenerator:
         self.min_y = min_y
         self.max_y = max_y
         self.biased_particles = 0
-        self,normalx = (0,0)
-        self,normaly = (0,0)
-        self,normalt = (0,0)
+        self.normalx = (0,0)
+        self.normaly = (0,0)
+        self.normalt = (0,0)
 
     # Generate a random particle
     def generate_particle(self):
         p = Particle()
         if self.biased_particles > 0:
-            p.pose.x = random.normal(self.normalx)
-            p.pose.y = random.normal(self.normaly)
-            p.pose.theta = random.normal(self.normalt)
+            p.pose.x = random.gauss(self.normalx[0],self.normalx[1])
+            p.pose.y = random.gauss(self.normaly[0],self.normaly[1])
+            p.pose.theta = random.gauss(self.normalt[0],self.normalt[1])
         else:
             p.pose.x = random.uniform(self.min_x, self.max_x)
             p.pose.y = random.uniform(self.min_y, self.max_y)

@@ -25,7 +25,7 @@ class PoseLikelihoodServerNode:
         self.angle_upper = 0.0
         self.angle_lower= 0.0
         self.angle_step=0.0
-        self.number_of_beams=0
+        self.number_of_beams=12
         self.real_observations = []
         self.likelihood = []
 
@@ -77,7 +77,7 @@ class PoseLikelihoodServerNode:
         self.range_max = data.range_max
         self.number_of_beams = len(data.ranges)
 
-        for i in xrange(self.number_of_beams):
+        for i in range(self.number_of_beams):
             self.real_observations.append(data.ranges[i])
 
 
@@ -89,7 +89,7 @@ class PoseLikelihoodServerNode:
         #To store the probabilities
         likelihood_array=[]
 
-        for member in xrange(len(multiposes)):
+        for member in range(len(multiposes)):
     
             #To calculate the probability according the formula for distribution in slides
             sigma = 0.4
@@ -107,27 +107,27 @@ class PoseLikelihoodServerNode:
             #request to client to get distances
             occupied_points_client_request= self.occupied_points_client(occupied_points_request)
             
-            for beamer_iterator in xrange(len(self.real_observations)): 
+            for beamer_iterator in range(len(self.real_observations)): 
                 distance_prediction = occupied_points_client_request.distances[beamer_iterator]
                 real_distance = self.real_observations[beamer_iterator]
-                euclidean_distance = abs(distance_prediction - real_distance)
                 
                 #Clamping for min/max values of the distance
                 if(distance_prediction < 0.0):
                     distance_prediction = 0.0
                 elif(distance_prediction > self.range_max):
                     distance_prediction = self.range_max
-
+                    
+                euclidean_distance = abs(distance_prediction - real_distance) 
 
                 if(euclidean_distance <= 2*sigma):
                     #Probability distribution: Determine likelihood for measured distance
                     beam_weight = (1.0 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
                     weight_sum += beam_weight
-                elif euclidean_distance > 2*sigma :
+                else :
                     missmatches_counter = missmatches_counter+1
 
-            if missmatches_counter < 4:
-                weight_sum = weight_sum /self.number_of_beams
+            if missmatches_counter < 6:
+                weight_sum = weight_sum/(self.number_of_beams-missmatches_counter)
             else :
                 weight_sum = 0
                 
