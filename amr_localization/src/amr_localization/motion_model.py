@@ -60,10 +60,11 @@ class MotionModel:
 
         ==========================================================================
         """
-        
-        pose.theta +=  random.gauss(self.rotation, self.sigrot)
-        pose.x += (random.gauss(self.forward, self.sigtran))*math.cos(pose.theta) - (random.gauss(self.lateral, self.sigtran))*math.sin(pose.theta)
-        pose.y += (random.gauss(self.forward, self.sigtran))*math.sin(pose.theta) + (random.gauss(self.lateral, self.sigtran))*math.cos(pose.theta)
+        if self.rotation != 0.0:
+            pose.theta +=  random.gauss(self.rotation, self.sigrot)
+        if self.forward != 0.0 and self.lateral != 0.0:
+            pose.x += (random.gauss(self.forward, self.sigtran))*math.cos(pose.theta) - (random.gauss(self.lateral, self.sigtran))*math.sin(pose.theta)
+            pose.y += (random.gauss(self.forward, self.sigtran))*math.sin(pose.theta) + (random.gauss(self.lateral, self.sigtran))*math.cos(pose.theta)
 
 
         return pose

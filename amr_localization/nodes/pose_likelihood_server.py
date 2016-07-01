@@ -95,7 +95,7 @@ class PoseLikelihoodServerNode:
             sigma = 0.4
             missmatches_counter = 0
             beam_weight = 0.0
-            weight_sum = 0.0
+            weight_sum = 1.0
             #creating the service request
             occupied_points_request = GetNearestOccupiedPointOnBeamRequest()
             #request.beams.append(pose)
@@ -119,15 +119,15 @@ class PoseLikelihoodServerNode:
                     
                 euclidean_distance = abs(distance_prediction - real_distance) 
 
-                if(euclidean_distance <= 2*sigma):
+                if(euclidean_distance <= 1.5*sigma):
                     #Probability distribution: Determine likelihood for measured distance
                     beam_weight = (1.0 / (sigma*math.sqrt(2*math.pi))) * math.exp((-math.pow(distance_prediction - real_distance, 2.0)) / (2 * math.pow(sigma, 2.0)))
-                    weight_sum += beam_weight
+                    weight_sum *= beam_weight
                 else :
                     missmatches_counter = missmatches_counter+1
 
-            if missmatches_counter < 6:
-                weight_sum = weight_sum/(self.number_of_beams-missmatches_counter)
+            if missmatches_counter < 4:
+                weight_sum = weight_sum#/(self.number_of_beams-missmatches_counter)
             else :
                 weight_sum = 0
                 
