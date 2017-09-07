@@ -5,7 +5,7 @@ All manuals and other information can be found in the wiki at https://mas.b-it-c
 
 ## Assignment description
 
-### Braitenberg vehicle implementation.
+### Braitenberg vehicle implementation
 
 - Robot with reactive behavior.
 
@@ -13,7 +13,7 @@ All manuals and other information can be found in the wiki at https://mas.b-it-c
 
 - File: src/braitenberg_vehicle.py
 
-### Motion controller.
+### Motion controller
 
 - Velocity control for an omnidirectional robot's linear and angular speeds.
 
@@ -23,7 +23,7 @@ All manuals and other information can be found in the wiki at https://mas.b-it-c
 
 ### Wallfollower
 
-- SMACH implementation of a wallfollowing robot.
+- SMACH implementation of a wallfollowing robot
 
 - Package: amr_bugs
 
